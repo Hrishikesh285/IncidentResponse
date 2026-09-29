@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OpsMemory — an on-call incident assistant that recalls similar past incidents from memory to diagnose and fix production issues faster.">
+  <title>OpsMemory — Incident Response with Hindsight Memory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Top stats bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-brand">
+      <span class="topbar-logo">⚡</span>
+      <h1 class="topbar-title">OpsMemory</h1>
+      <span class="topbar-tagline">Incident Response · Powered by Hindsight Memory</span>
+      <span class="mode-badge hidden" id="mode-badge" title="Running with local fallbacks">Local mode</span>
+    </div>
+    <div class="topbar-stats" id="stats-bar">
+      <div class="stat-chip">
+        <span class="stat-label">Incidents</span>
+        <span class="stat-value" id="stat-total">—</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">Resolved</span>
+        <span class="stat-value" id="stat-resolved">—</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-label">Avg Resolution</span>
+        <span class="stat-value" id="stat-avg">—</span>
+      </div>
+      <div class="stat-chip memory-chip">
+        <span class="stat-label">Memories</span>
+        <span class="stat-value" id="stat-memories">—</span>
+      </div>
+      <button class="btn-history" id="btn-history" title="View incident history">History</button>
+      <button class="btn-reset" id="btn-reset" title="Reset and re-seed demo data">↺ Reset Demo</button>
+    </div>
+  </header>
+
+  <!-- Incident history drawer -->
+  <aside class="history-drawer hidden" id="history-drawer" aria-label="Incident history">
+    <div class="history-header">
+      <h2>Incident History</h2>
+      <button type="button" class="btn-close-history" id="btn-close-history" aria-label="Close history">✕</button>
+    </div>
+    <div class="history-filters">
+      <button type="button" class="filter-chip active" data-filter="all">All</button>
+      <button type="button" class="filter-chip" data-filter="open">Open</button>
+      <button type="button" class="filter-chip" data-filter="resolved">Resolved</button>
+    </div>
+    <div class="history-list" id="history-list">
+      <p class="history-empty">Loading…</p>
+    </div>
+  </aside>
+  <div class="history-backdrop hidden" id="history-backdrop"></div>
+
+  <!-- Main three-panel layout -->
+  <main class="workspace" role="main">
+
+    <!-- LEFT: New Incident Form -->
+    <section class="panel panel-left" aria-label="New Incident">
+      <div class="panel-header">
+        <h2 class="panel-title">New Incident</h2>
+        <div class="demo-loader">
+          <label for="demo-select" class="sr-only">Load demo incident</label>
+          <select id="demo-select" class="select-demo">
+            <option value="">Load demo incident…</option>
+            <option value="A">Demo A — payments-api pool exhausted (SEV1)</option>
+            <option value="B">Demo B — auth-service Redis OOM (SEV2)</option>
+            <option value="C">Demo C — order-service pool exhausted (SEV1)</option>
+          </select>
+        </div>
+      </div>
+
+      <form id="incident-form" novalidate>
+        <div class="form-group">
+          <label for="input-title">Title <span class="required">*</span></label>
+          <input type="text" id="input-title" name="title" placeholder="Short summary of the incident" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-service">Service <span class="required">*</span></label>
+            <select id="input-service" name="service" required>
+              <option value="">Select service…</option>
+              <option value="payments-api">payments-api</option>
+              <option value="auth-service">auth-service</option>
+              <option value="order-service">order-service</option>
+              <option value="inventory-service">inventory-service</option>
+              <option value="notification-service">notification-service</option>
+              <option value="search-service">search-service</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="input-severity">Severity <span class="required">*</span></label>
+            <select id="input-severity" name="severity" required>
+              <option value="">Select…</option>
+              <option value="SEV1">SEV1 — Critical</option>
+              <option value="SEV2">SEV2 — Major</option>
+              <option value="SEV3">SEV3 — Minor</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-symptoms">Symptoms</label>
+          <textarea id="input-symptoms" name="symptoms" rows="3" placeholder="What did you observe? Error rates, alerts, user reports…"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="input-errorlog">Error Log</label>
+          <textarea id="input-errorlog" name="error_log" rows="8" placeholder="Paste relevant log lines or stack trace…" class="mono"></textarea>
+        </div>
+
+        <!-- Memory toggle -->
+        <div class="memory-toggle-row">
+          <div class="toggle-group">
+            <button type="button" id="memory-toggle" class="memory-toggle memory-on" aria-pressed="true" role="switch">
+              <span class="toggle-track">
+                <span class="toggle-thumb"></span>
+              </span>
+              <span class="toggle-label" id="memory-label">Memory ON</span>
+            </button>
+            <span class="toggle-hint">Use past incident memory for diagnosis</span>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-analyze" class="btn-primary">
+          <span class="btn-icon">🔍</span> Analyze Incident
+        </button>
+      </form>
+    </section>
+
+    <!-- CENTRE: Diagnosis -->
+    <section class="panel panel-center" aria-label="Diagnosis">
+      <div class="panel-header">
+        <h2 class="panel-title">Diagnosis</h2>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="diag-empty">
+        <div class="empty-icon">🩺</div>
+        <p>Submit an incident to see the AI diagnosis here.</p>
+      </div>
+
+      <!-- Loading state -->
+      <div class="loading-state hidden" id="diag-loading">
+        <div class="spinner"></div>
+        <p>Analyzing incident…</p>
+      </div>
+
+      <!-- Results -->
+      <div class="diag-results hidden" id="diag-results">
+        <!-- Memory banner -->
+        <div class="memory-banner" id="memory-banner"></div>
+
+        <!-- Incident reference -->
+        <div class="incident-ref">
+          Incident <span class="incident-id-badge" id="result-incident-id">—</span>
+          <span class="latency-badge" id="result-latency">—</span>
+        </div>
+
+        <!-- Diagnosis text -->
+        <div class="diag-section">
+          <h3 class="diag-label">Diagnosis</h3>
+          <p id="result-diagnosis" class="diag-text"></p>
+        </div>
+
+        <div class="diag-section">
+          <h3 class="diag-label">Likely Root Cause</h3>
+          <p id="result-root-cause" class="diag-text highlight-root"></p>
+        </div>
+
+        <div class="diag-section">
+          <div class="diag-label-row">
+            <h3 class="diag-label">Recommended Steps</h3>
+            <span class="confidence-badge" id="result-confidence"></span>
+          </div>
+          <ol id="result-steps" class="steps-list"></ol>
+        </div>
+
+        <!-- Resolve form -->
+        <div class="resolve-section" id="resolve-section">
+          <h3 class="resolve-title">Mark as Resolved</h3>
+          <form id="resolve-form">
+            <input type="hidden" id="resolve-incident-id">
+            <div class="form-group">
+              <label for="resolve-root-cause">Root Cause</label>
+              <input type="text" id="resolve-root-cause" placeholder="Confirmed root cause…" required>
+            </div>
+            <div class="form-group">
+              <label for="resolve-steps">Fix Steps <span class="hint">(one per line)</span></label>
+              <textarea id="resolve-steps" rows="4" placeholder="Step 1&#10;Step 2&#10;Step 3" required class="mono"></textarea>
+            </div>
+            <div class="form-group form-group-sm">
+              <label for="resolve-minutes">Resolution Time (minutes)</label>
+              <input type="number" id="resolve-minutes" min="1" placeholder="e.g. 22" required>
+            </div>
+            <button type="submit" class="btn-resolve">
+              <span class="btn-icon">✓</span> Resolve &amp; Learn
+            </button>
+          </form>
+          <div class="memory-learned hidden" id="memory-learned">
+            <span class="learned-icon">🧠</span>
+            <span id="memory-learned-text">Learned: this incident is now in memory and will help future diagnoses.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Recalled from Memory -->
+    <section class="panel panel-right" aria-label="Recalled from Memory">
+      <div class="panel-header">
+        <h2 class="panel-title">Recalled from Memory</h2>
+      </div>
+
+      <div class="empty-state" id="recall-empty">
+        <div class="empty-icon">🗂️</div>
+        <p>Past incidents that match the new one will appear here.</p>
+      </div>
+
+      <div id="recall-list" class="recall-list hidden"></div>
+    </section>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

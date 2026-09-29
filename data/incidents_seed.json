@@ -1,0 +1,762 @@
+[
+  {
+    "incident_id": "INC-0001",
+    "title": "inventory-service \u2014 HikariPool connection timeout causing 5xx flood",
+    "service": "inventory-service",
+    "severity": "SEV1",
+    "error_log": "2025-05-06T23:06:12.345Z ERROR HikariPool-1 \u2014 Connection is not available, request timed out after 30000ms\n2025-05-06T23:06:12.350Z ERROR com.zaxxer.hikari.pool.HikariPool \u2014 HikariPool-1 \u2014 Exception during pool initialization.\n2025-05-06T23:06:12.400Z WARN inventory-service-y6dpb-pod \u2014 Pool size: 20/20 active connections\n2025-05-06T23:06:13.001Z ERROR inventory-service-y6dpb-pod \u2014 org.postgresql.util.PSQLException: FATAL: sorry, too many clients already\n",
+    "symptoms": "5xx error rate climbed to 40%. HikariPool-1 timeout errors in logs.",
+    "root_cause": "DB connection pool exhausted after traffic spike",
+    "fix_steps": [
+      "Increase connection pool size to 50 in application config",
+      "Restart inventory-service pods to apply new pool settings",
+      "Add pool-timeout alert at 80% utilisation threshold",
+      "Implement connection pool monitoring dashboard"
+    ],
+    "resolution_minutes": 56,
+    "status": "resolved",
+    "created_at": "2025-05-06T23:06:00+00:00",
+    "resolved_at": "2025-05-07T00:02:00+00:00"
+  },
+  {
+    "incident_id": "INC-0002",
+    "title": "auth-service \u2014 DB connection pool saturated, requests queuing",
+    "service": "auth-service",
+    "severity": "SEV1",
+    "error_log": "2025-08-22T06:45:00Z ERROR auth-service-xthv3-pod \u2014 Timeout waiting for connection from pool\n2025-08-22T06:45:01Z ERROR auth-service-xthv3-pod \u2014 Active pool connections: 20, pending: 47\n2025-08-22T06:45:02Z WARN auth-service-xthv3-pod \u2014 HikariCP pool auth-service-pool exhausted\n",
+    "symptoms": "P99 latency exceeded 20 s. Connection pool wait queue backed up.",
+    "root_cause": "DB connection pool exhausted after traffic spike",
+    "fix_steps": [
+      "Increase connection pool size to 50 in application config",
+      "Restart auth-service pods to apply new pool settings",
+      "Add pool-timeout alert at 80% utilisation threshold",
+      "Implement connection pool monitoring dashboard"
+    ],
+    "resolution_minutes": 47,
+    "status": "resolved",
+    "created_at": "2025-08-22T06:45:00+00:00",
+    "resolved_at": "2025-08-22T07:32:00+00:00"
+  },
+  {
+    "incident_id": "INC-0003",
+    "title": "order-service \u2014 connection pool limit reached, elevated latency",
+    "service": "order-service",
+    "severity": "SEV2",
+    "error_log": "2025-05-10T06:48:07Z ERROR order-service-mdd4v-pod \u2014 java.sql.SQLException: Timeout: Pool empty, cannot acquire connection\n2025-05-10T06:48:08Z ERROR order-service-mdd4v-pod \u2014 max_connections=20 reached on db-primary\n",
+    "symptoms": "Requests timing out after 30 s. DB connections at max.",
+    "root_cause": "DB connection pool exhausted after traffic spike",
+    "fix_steps": [
+      "Increase connection pool size to 50 in application config",
+      "Restart order-service pods to apply new pool settings",
+      "Add pool-timeout alert at 80% utilisation threshold",
+      "Implement connection pool monitoring dashboard"
+    ],
+    "resolution_minutes": 29,
+    "status": "resolved",
+    "created_at": "2025-05-10T06:48:00+00:00",
+    "resolved_at": "2025-05-10T07:17:00+00:00"
+  },
+  {
+    "incident_id": "INC-0004",
+    "title": "notification-service \u2014 JDBC connection exhaustion on peak traffic",
+    "service": "notification-service",
+    "severity": "SEV2",
+    "error_log": "2025-04-21T17:18:15Z ERROR notification-service-3w5uz-pod \u2014 [ERROR] HikariPool-2 - Connection is not available\n2025-04-21T17:18:16Z ERROR notification-service-3w5uz-pod \u2014 Caused by: PSQLException: FATAL: remaining connection slots are reserved\n",
+    "symptoms": "Dashboard showed DB errors. All pool slots occupied.",
+    "root_cause": "DB connection pool exhausted after traffic spike",
+    "fix_steps": [
+      "Increase connection pool size to 50 in application config",
+      "Restart notification-service pods to apply new pool settings",
+      "Add pool-timeout alert at 80% utilisation threshold",
+      "Implement connection pool monitoring dashboard"
+    ],
+    "resolution_minutes": 23,
+    "status": "resolved",
+    "created_at": "2025-04-21T17:18:00+00:00",
+    "resolved_at": "2025-04-21T17:41:00+00:00"
+  },
+  {
+    "incident_id": "INC-0005",
+    "title": "payments-api \u2014 connection-not-available errors spiking",
+    "service": "payments-api",
+    "severity": "SEV2",
+    "error_log": "2025-04-26T12:17:22Z WARN payments-api-q4fmy-pod \u2014 Connection pool at 100% utilisation\n2025-04-26T12:17:23Z ERROR payments-api-q4fmy-pod \u2014 Unable to acquire JDBC Connection\n",
+    "symptoms": "On-call alerted by PagerDuty: 503s from payments-api.",
+    "root_cause": "DB connection pool exhausted after traffic spike",
+    "fix_steps": [
+      "Increase connection pool size to 50 in application config",
+      "Restart payments-api pods to apply new pool settings",
+      "Add pool-timeout alert at 80% utilisation threshold",
+      "Implement connection pool monitoring dashboard"
+    ],
+    "resolution_minutes": 16,
+    "status": "resolved",
+    "created_at": "2025-04-26T12:17:00+00:00",
+    "resolved_at": "2025-04-26T12:33:00+00:00"
+  },
+  {
+    "incident_id": "INC-0006",
+    "title": "payments-api \u2014 Redis OOM errors causing cache write failures",
+    "service": "payments-api",
+    "severity": "SEV2",
+    "error_log": "2025-09-24T17:14:05Z ERROR payments-api-y41ib-pod \u2014 OOM command not allowed when used memory > 'maxmemory'\n2025-09-24T17:14:05Z ERROR payments-api-y41ib-pod \u2014 redis.clients.jedis.exceptions.JedisDataException: OOM\n2025-09-24T17:14:06Z WARN payments-api-y41ib-pod \u2014 Redis used_memory: 3.9GB / maxmemory: 4GB\n",
+    "symptoms": "Redis OOM command not allowed when used memory > 'maxmemory' errors in logs.",
+    "root_cause": "Redis maxmemory limit reached; noeviction policy blocking all writes",
+    "fix_steps": [
+      "Raise Redis maxmemory to 8 GB on cache-cluster-01",
+      "Set eviction policy to allkeys-lru",
+      "Flush stale session keys older than 7 days",
+      "Add Redis memory utilisation alert at 75%"
+    ],
+    "resolution_minutes": 70,
+    "status": "resolved",
+    "created_at": "2025-09-24T17:14:00+00:00",
+    "resolved_at": "2025-09-24T18:24:00+00:00"
+  },
+  {
+    "incident_id": "INC-0007",
+    "title": "order-service \u2014 Redis maxmemory exceeded, key eviction storm",
+    "service": "order-service",
+    "severity": "SEV1",
+    "error_log": "2025-08-24T22:20:10Z ERROR order-service-hr5xf-pod \u2014 COMMAND OOM: used_memory 4294967296 maxmemory 4294967296\n2025-08-24T22:20:11Z WARN order-service-hr5xf-pod \u2014 Eviction policy: noeviction \u2014 refusing writes\n",
+    "symptoms": "Cache miss rate jumped to 95%. DB load tripled.",
+    "root_cause": "Redis maxmemory limit reached; noeviction policy blocking all writes",
+    "fix_steps": [
+      "Raise Redis maxmemory to 8 GB on cache-cluster-01",
+      "Set eviction policy to allkeys-lru",
+      "Flush stale session keys older than 7 days",
+      "Add Redis memory utilisation alert at 75%"
+    ],
+    "resolution_minutes": 48,
+    "status": "resolved",
+    "created_at": "2025-08-24T22:20:00+00:00",
+    "resolved_at": "2025-08-24T23:08:00+00:00"
+  },
+  {
+    "incident_id": "INC-0008",
+    "title": "inventory-service \u2014 Redis OOM command not allowed, login failures",
+    "service": "inventory-service",
+    "severity": "SEV2",
+    "error_log": "2025-08-28T13:57:33Z ERROR inventory-service-vn9er-pod \u2014 RedisCommandExecutionException: OOM command not allowed\n2025-08-28T13:57:34Z ERROR inventory-service-vn9er-pod \u2014 Session store write failed: Redis out of memory\n",
+    "symptoms": "User sessions expiring immediately. Redis memory at limit.",
+    "root_cause": "Redis maxmemory limit reached; noeviction policy blocking all writes",
+    "fix_steps": [
+      "Raise Redis maxmemory to 8 GB on cache-cluster-01",
+      "Set eviction policy to allkeys-lru",
+      "Flush stale session keys older than 7 days",
+      "Add Redis memory utilisation alert at 75%"
+    ],
+    "resolution_minutes": 27,
+    "status": "resolved",
+    "created_at": "2025-08-28T13:57:00+00:00",
+    "resolved_at": "2025-08-28T14:24:00+00:00"
+  },
+  {
+    "incident_id": "INC-0009",
+    "title": "search-service \u2014 cache eviction causing thundering-herd on DB",
+    "service": "search-service",
+    "severity": "SEV2",
+    "error_log": "2025-07-18T19:04:44Z WARN search-service-nvqjt-pod \u2014 redis evicted 50000 keys in last 60s\n2025-07-18T19:04:45Z ERROR search-service-nvqjt-pod \u2014 Cache stampede detected, DB connections spiking\n",
+    "symptoms": "Random login failures. Redis evicting session keys aggressively.",
+    "root_cause": "Redis maxmemory limit reached; noeviction policy blocking all writes",
+    "fix_steps": [
+      "Raise Redis maxmemory to 8 GB on cache-cluster-01",
+      "Set eviction policy to allkeys-lru",
+      "Flush stale session keys older than 7 days",
+      "Add Redis memory utilisation alert at 75%"
+    ],
+    "resolution_minutes": 29,
+    "status": "resolved",
+    "created_at": "2025-07-18T19:04:00+00:00",
+    "resolved_at": "2025-07-18T19:33:00+00:00"
+  },
+  {
+    "incident_id": "INC-0010",
+    "title": "auth-service \u2014 Redis memory full, session data lost",
+    "service": "auth-service",
+    "severity": "SEV3",
+    "error_log": "2025-06-27T03:18:55Z ERROR auth-service-pq85j-pod \u2014 redis: ERR OOM \u2014 used memory 100% of maxmemory\n",
+    "symptoms": "High error rate from auth-service. Redis memory graphs maxed out.",
+    "root_cause": "Redis maxmemory limit reached; noeviction policy blocking all writes",
+    "fix_steps": [
+      "Raise Redis maxmemory to 8 GB on cache-cluster-01",
+      "Set eviction policy to allkeys-lru",
+      "Flush stale session keys older than 7 days",
+      "Add Redis memory utilisation alert at 75%"
+    ],
+    "resolution_minutes": 20,
+    "status": "resolved",
+    "created_at": "2025-06-27T03:18:00+00:00",
+    "resolved_at": "2025-06-27T03:38:00+00:00"
+  },
+  {
+    "incident_id": "INC-0011",
+    "title": "notification-service \u2014 TLS certificate expired, HTTPS handshake failures",
+    "service": "notification-service",
+    "severity": "SEV1",
+    "error_log": "2025-08-14T00:38:00Z ERROR notification-service-la753-pod \u2014 SSL routines:ssl3_read_bytes:sslv3 alert certificate expired\n2025-08-14T00:38:01Z ERROR notification-service-la753-pod \u2014 Certificate expired at 2025-08-14T00:00:00Z\n2025-08-14T00:38:02Z WARN nginx \u2014 upstream SSL certificate verify error: (10:certificate has expired)\n",
+    "symptoms": "Clients reporting SSL_ERROR_RX_RECORD_TOO_LONG. Certificate expired.",
+    "root_cause": "TLS certificate for the service endpoint expired without automated renewal",
+    "fix_steps": [
+      "Renew TLS certificate via cert-manager / Let's Encrypt",
+      "Reload ingress controller to pick up new certificate",
+      "Verify certificate validity with: openssl s_client -connect notification-service:443",
+      "Add certificate expiry monitor alerting 30 days before expiry"
+    ],
+    "resolution_minutes": 48,
+    "status": "resolved",
+    "created_at": "2025-08-14T00:38:00+00:00",
+    "resolved_at": "2025-08-14T01:26:00+00:00"
+  },
+  {
+    "incident_id": "INC-0012",
+    "title": "inventory-service \u2014 SSL cert expired causing client connection errors",
+    "service": "inventory-service",
+    "severity": "SEV1",
+    "error_log": "2025-04-21T02:46:10Z ERROR inventory-service-rc11e-pod \u2014 certificate verify failed: certificate has expired (_ssl.c:1129)\n2025-04-21T02:46:11Z ERROR ingress \u2014 SSL_CTX_use_certificate: error:0200100D\n",
+    "symptoms": "HTTPS connections refused. Certificate expired yesterday.",
+    "root_cause": "TLS certificate for the service endpoint expired without automated renewal",
+    "fix_steps": [
+      "Renew TLS certificate via cert-manager / Let's Encrypt",
+      "Reload ingress controller to pick up new certificate",
+      "Verify certificate validity with: openssl s_client -connect inventory-service:443",
+      "Add certificate expiry monitor alerting 30 days before expiry"
+    ],
+    "resolution_minutes": 44,
+    "status": "resolved",
+    "created_at": "2025-04-21T02:46:00+00:00",
+    "resolved_at": "2025-04-21T03:30:00+00:00"
+  },
+  {
+    "incident_id": "INC-0013",
+    "title": "search-service \u2014 certificate validity expired, 525 errors from CDN",
+    "service": "search-service",
+    "severity": "SEV2",
+    "error_log": "2025-09-03T13:13:20Z WARN search-service-71yzo-pod \u2014 TLS handshake failed: certificate expired\n2025-09-03T13:13:21Z ERROR search-service-71yzo-pod \u2014 x509: certificate has expired or is not yet valid\n",
+    "symptoms": "CDN returning 525 SSL Handshake Failed errors. Cert expired.",
+    "root_cause": "TLS certificate for the service endpoint expired without automated renewal",
+    "fix_steps": [
+      "Renew TLS certificate via cert-manager / Let's Encrypt",
+      "Reload ingress controller to pick up new certificate",
+      "Verify certificate validity with: openssl s_client -connect search-service:443",
+      "Add certificate expiry monitor alerting 30 days before expiry"
+    ],
+    "resolution_minutes": 28,
+    "status": "resolved",
+    "created_at": "2025-09-03T13:13:00+00:00",
+    "resolved_at": "2025-09-03T13:41:00+00:00"
+  },
+  {
+    "incident_id": "INC-0014",
+    "title": "auth-service \u2014 mTLS cert expired, internal service auth broken",
+    "service": "auth-service",
+    "severity": "SEV2",
+    "error_log": "2025-06-03T07:04:30Z ERROR ingress-nginx \u2014 upstream timed out (110: Connection timed out) certificate expired\n",
+    "symptoms": "Internal service-to-service calls failing with handshake timeout.",
+    "root_cause": "TLS certificate for the service endpoint expired without automated renewal",
+    "fix_steps": [
+      "Renew TLS certificate via cert-manager / Let's Encrypt",
+      "Reload ingress controller to pick up new certificate",
+      "Verify certificate validity with: openssl s_client -connect auth-service:443",
+      "Add certificate expiry monitor alerting 30 days before expiry"
+    ],
+    "resolution_minutes": 16,
+    "status": "resolved",
+    "created_at": "2025-06-03T07:04:00+00:00",
+    "resolved_at": "2025-06-03T07:20:00+00:00"
+  },
+  {
+    "incident_id": "INC-0015",
+    "title": "order-service \u2014 TLS handshake error due to expired certificate",
+    "service": "order-service",
+    "severity": "SEV3",
+    "error_log": "2025-04-19T16:15:40Z ERROR order-service-krt05-pod \u2014 TLS: remote error: tls: certificate expired\n",
+    "symptoms": "Browser console shows NET::ERR_CERT_DATE_INVALID for order-service.",
+    "root_cause": "TLS certificate for the service endpoint expired without automated renewal",
+    "fix_steps": [
+      "Renew TLS certificate via cert-manager / Let's Encrypt",
+      "Reload ingress controller to pick up new certificate",
+      "Verify certificate validity with: openssl s_client -connect order-service:443",
+      "Add certificate expiry monitor alerting 30 days before expiry"
+    ],
+    "resolution_minutes": 15,
+    "status": "resolved",
+    "created_at": "2025-04-19T16:15:00+00:00",
+    "resolved_at": "2025-04-19T16:30:00+00:00"
+  },
+  {
+    "incident_id": "INC-0016",
+    "title": "order-service \u2014 bad deploy introduced env var misconfiguration",
+    "service": "order-service",
+    "severity": "SEV1",
+    "error_log": "2025-07-15T14:55:00Z ERROR order-service-0y9do-pod \u2014 Failed to initialise application context\n2025-07-15T14:55:01Z ERROR order-service-0y9do-pod \u2014 Caused by: IllegalArgumentException: Could not resolve placeholder 'DB_HOST'\n2025-07-15T14:55:02Z WARN k8s \u2014 Pod order-service-0y9do-pod restarting (CrashLoopBackOff) \u2014 restarts: 5\n",
+    "symptoms": "Pods crashing on startup after release. CrashLoopBackOff observed.",
+    "root_cause": "Bad deploy: missing or incorrect env var introduced in config map",
+    "fix_steps": [
+      "Rollback to previous release using: kubectl rollout undo deploy/order-service",
+      "Correct the environment variable in the config map",
+      "Redeploy with validated config",
+      "Add config validation step to CI pipeline"
+    ],
+    "resolution_minutes": 41,
+    "status": "resolved",
+    "created_at": "2025-07-15T14:55:00+00:00",
+    "resolved_at": "2025-07-15T15:36:00+00:00"
+  },
+  {
+    "incident_id": "INC-0017",
+    "title": "notification-service \u2014 broken config in release v9.3.0 causing start-up failures",
+    "service": "notification-service",
+    "severity": "SEV2",
+    "error_log": "2025-08-16T14:08:05Z ERROR notification-service-pki7p-pod \u2014 java.lang.NullPointerException at Config.load(Config.java:42)\n2025-08-16T14:08:06Z ERROR notification-service-pki7p-pod \u2014 APPLICATION FAILED TO START: env var REDIS_URL not found\n",
+    "symptoms": "Error rate spiked immediately after deploy. Rollback candidate.",
+    "root_cause": "Bad deploy: missing or incorrect env var introduced in config map",
+    "fix_steps": [
+      "Rollback to previous release using: kubectl rollout undo deploy/notification-service",
+      "Correct the environment variable in the config map",
+      "Redeploy with validated config",
+      "Add config validation step to CI pipeline"
+    ],
+    "resolution_minutes": 33,
+    "status": "resolved",
+    "created_at": "2025-08-16T14:08:00+00:00",
+    "resolved_at": "2025-08-16T14:41:00+00:00"
+  },
+  {
+    "incident_id": "INC-0018",
+    "title": "search-service \u2014 rollout introduced null-pointer crash on startup",
+    "service": "search-service",
+    "severity": "SEV2",
+    "error_log": "2025-04-24T07:10:10Z ERROR search-service-or56f-pod \u2014 OCI runtime error: env var KAFKA_BROKERS missing\n2025-04-24T07:10:11Z WARN argocd \u2014 Rollout search-service-v1.12.4 degraded\n",
+    "symptoms": "NullPointerException on every request after upgrade.",
+    "root_cause": "Bad deploy: missing or incorrect env var introduced in config map",
+    "fix_steps": [
+      "Rollback to previous release using: kubectl rollout undo deploy/search-service",
+      "Correct the environment variable in the config map",
+      "Redeploy with validated config",
+      "Add config validation step to CI pipeline"
+    ],
+    "resolution_minutes": 20,
+    "status": "resolved",
+    "created_at": "2025-04-24T07:10:00+00:00",
+    "resolved_at": "2025-04-24T07:30:00+00:00"
+  },
+  {
+    "incident_id": "INC-0019",
+    "title": "payments-api \u2014 misconfigured feature flag causing request routing errors",
+    "service": "payments-api",
+    "severity": "SEV3",
+    "error_log": "2025-07-18T22:46:15Z ERROR payments-api-9uzfk-pod \u2014 Feature flag client: config parse error at line 7\n",
+    "symptoms": "Feature flag misconfiguration routing traffic to wrong endpoint.",
+    "root_cause": "Bad deploy: missing or incorrect env var introduced in config map",
+    "fix_steps": [
+      "Rollback to previous release using: kubectl rollout undo deploy/payments-api",
+      "Correct the environment variable in the config map",
+      "Redeploy with validated config",
+      "Add config validation step to CI pipeline"
+    ],
+    "resolution_minutes": 14,
+    "status": "resolved",
+    "created_at": "2025-07-18T22:46:00+00:00",
+    "resolved_at": "2025-07-18T23:00:00+00:00"
+  },
+  {
+    "incident_id": "INC-0020",
+    "title": "auth-service \u2014 wrong DB URL in new config map causing connection refusals",
+    "service": "auth-service",
+    "severity": "SEV3",
+    "error_log": "2025-04-15T01:37:20Z ERROR auth-service-r7tcs-pod \u2014 psycopg2.OperationalError: could not connect to server: Connection refused\n2025-04-15T01:37:21Z ERROR auth-service-r7tcs-pod \u2014 DB_HOST=localhost but expected postgres-primary.internal\n",
+    "symptoms": "DB connection refused errors after config map update.",
+    "root_cause": "Bad deploy: missing or incorrect env var introduced in config map",
+    "fix_steps": [
+      "Rollback to previous release using: kubectl rollout undo deploy/auth-service",
+      "Correct the environment variable in the config map",
+      "Redeploy with validated config",
+      "Add config validation step to CI pipeline"
+    ],
+    "resolution_minutes": 12,
+    "status": "resolved",
+    "created_at": "2025-04-15T01:37:00+00:00",
+    "resolved_at": "2025-04-15T01:49:00+00:00"
+  },
+  {
+    "incident_id": "INC-0021",
+    "title": "notification-service \u2014 Kafka consumer lag growing, messages backing up",
+    "service": "notification-service",
+    "severity": "SEV2",
+    "error_log": "2025-04-11T19:05:00Z WARN notification-service-pvs7h-pod \u2014 consumer-group=notification-service-cg lag=523441 topic=orders-events\n2025-04-11T19:05:01Z WARN notification-service-pvs7h-pod \u2014 Commit offset failed: org.apache.kafka.clients.consumer.CommitFailedException\n2025-04-11T19:05:02Z INFO kafka \u2014 Group notification-service-cg is rebalancing\n",
+    "symptoms": "Consumer lag on topic orders-events exceeded 500k messages.",
+    "root_cause": "Kafka consumer group fell behind due to slow processing; stuck partition offset",
+    "fix_steps": [
+      "Scale notification-service consumer pods from 2 to 6",
+      "Reset stuck partition offset: kafka-consumer-groups.sh --reset-offsets",
+      "Identify and fix slow downstream DB query causing processing delay",
+      "Add consumer lag alert at 10k messages threshold"
+    ],
+    "resolution_minutes": 64,
+    "status": "resolved",
+    "created_at": "2025-04-11T19:05:00+00:00",
+    "resolved_at": "2025-04-11T20:09:00+00:00"
+  },
+  {
+    "incident_id": "INC-0022",
+    "title": "order-service \u2014 consumer group stalled, partition offset stuck",
+    "service": "order-service",
+    "severity": "SEV2",
+    "error_log": "2025-09-19T20:19:10Z ERROR order-service-q77aw-pod \u2014 Offset commit failed after 3 retries; partition 4 stuck\n2025-09-19T20:19:11Z WARN order-service-q77aw-pod \u2014 Consumer poll records=0 \u2014 possible broker timeout\n",
+    "symptoms": "Kafka partition offset stuck, consumers not advancing.",
+    "root_cause": "Kafka consumer group fell behind due to slow processing; stuck partition offset",
+    "fix_steps": [
+      "Scale order-service consumer pods from 2 to 6",
+      "Reset stuck partition offset: kafka-consumer-groups.sh --reset-offsets",
+      "Identify and fix slow downstream DB query causing processing delay",
+      "Add consumer lag alert at 10k messages threshold"
+    ],
+    "resolution_minutes": 42,
+    "status": "resolved",
+    "created_at": "2025-09-19T20:19:00+00:00",
+    "resolved_at": "2025-09-19T21:01:00+00:00"
+  },
+  {
+    "incident_id": "INC-0023",
+    "title": "search-service \u2014 Kafka lag caused by slow downstream DB writes",
+    "service": "search-service",
+    "severity": "SEV2",
+    "error_log": "2025-06-07T04:59:20Z WARN search-service-mcikp-pod \u2014 max.poll.interval.ms exceeded; consumer kicked out of group\n2025-06-07T04:59:21Z ERROR search-service-mcikp-pod \u2014 Rebalance loop detected; consumer lag=128000\n",
+    "symptoms": "Downstream DB latency causing Kafka consumer to fall behind.",
+    "root_cause": "Kafka consumer group fell behind due to slow processing; stuck partition offset",
+    "fix_steps": [
+      "Scale search-service consumer pods from 2 to 6",
+      "Reset stuck partition offset: kafka-consumer-groups.sh --reset-offsets",
+      "Identify and fix slow downstream DB query causing processing delay",
+      "Add consumer lag alert at 10k messages threshold"
+    ],
+    "resolution_minutes": 33,
+    "status": "resolved",
+    "created_at": "2025-06-07T04:59:00+00:00",
+    "resolved_at": "2025-06-07T05:32:00+00:00"
+  },
+  {
+    "incident_id": "INC-0024",
+    "title": "inventory-service \u2014 message processing delay affecting downstream search-service",
+    "service": "inventory-service",
+    "severity": "SEV3",
+    "error_log": "2025-09-18T17:19:30Z WARN inventory-service-7d5j6-pod \u2014 Slow message processing: 8200ms per message\n2025-09-18T17:19:31Z ERROR inventory-service-7d5j6-pod \u2014 DB write latency 7500ms causing consumer timeout\n",
+    "symptoms": "Messages delayed 45 minutes causing SLA breach.",
+    "root_cause": "Kafka consumer group fell behind due to slow processing; stuck partition offset",
+    "fix_steps": [
+      "Scale inventory-service consumer pods from 2 to 6",
+      "Reset stuck partition offset: kafka-consumer-groups.sh --reset-offsets",
+      "Identify and fix slow downstream DB query causing processing delay",
+      "Add consumer lag alert at 10k messages threshold"
+    ],
+    "resolution_minutes": 15,
+    "status": "resolved",
+    "created_at": "2025-09-18T17:19:00+00:00",
+    "resolved_at": "2025-09-18T17:34:00+00:00"
+  },
+  {
+    "incident_id": "INC-0025",
+    "title": "auth-service \u2014 Kafka partition rebalance storm causing consumer lag",
+    "service": "auth-service",
+    "severity": "SEV3",
+    "error_log": "2025-05-24T22:21:40Z ERROR auth-service-hwjr6-pod \u2014 kafka.common.LeaderNotAvailableException partition=7\n2025-05-24T22:21:41Z WARN auth-service-hwjr6-pod \u2014 Consumer lag=89000 and growing\n",
+    "symptoms": "Consumer group rebalancing every 30 s due to slow consumer.",
+    "root_cause": "Kafka consumer group fell behind due to slow processing; stuck partition offset",
+    "fix_steps": [
+      "Scale auth-service consumer pods from 2 to 6",
+      "Reset stuck partition offset: kafka-consumer-groups.sh --reset-offsets",
+      "Identify and fix slow downstream DB query causing processing delay",
+      "Add consumer lag alert at 10k messages threshold"
+    ],
+    "resolution_minutes": 19,
+    "status": "resolved",
+    "created_at": "2025-05-24T22:21:00+00:00",
+    "resolved_at": "2025-05-24T22:40:00+00:00"
+  },
+  {
+    "incident_id": "INC-0026",
+    "title": "search-service \u2014 disk full from log growth, writes failing",
+    "service": "search-service",
+    "severity": "SEV2",
+    "error_log": "2025-07-23T17:45:00Z ERROR search-service-pac56-pod \u2014 IOException: No space left on device\n2025-07-23T17:45:01Z ERROR search-service-pac56-pod \u2014 Failed to write log: /var/log/search-service/app.log\n2025-07-23T17:45:02Z WARN node-agent \u2014 node-03 disk usage: 100% on /var/log\n",
+    "symptoms": "Application throwing 'No space left on device' errors.",
+    "root_cause": "Disk full due to log file accumulation without proper rotation",
+    "fix_steps": [
+      "Rotate and purge logs older than 7 days: find /var/log -name '*.log' -mtime +7 -delete",
+      "Free space immediately: rm -rf /var/log/search-service/old-*.log",
+      "Resize the volume if disk growth is structural",
+      "Add disk usage alert at 80% threshold"
+    ],
+    "resolution_minutes": 52,
+    "status": "resolved",
+    "created_at": "2025-07-23T17:45:00+00:00",
+    "resolved_at": "2025-07-23T18:37:00+00:00"
+  },
+  {
+    "incident_id": "INC-0027",
+    "title": "inventory-service \u2014 filesystem 100% full causing application errors",
+    "service": "inventory-service",
+    "severity": "SEV2",
+    "error_log": "2025-05-08T13:08:05Z ERROR inventory-service-bn78b-pod \u2014 OSError: [Errno 28] No space left on device: '/tmp/upload'\n2025-05-08T13:08:06Z WARN inventory-service-bn78b-pod \u2014 Disk /dev/sda1 at 99.8% \u2014 write buffer flushing\n",
+    "symptoms": "Write operations failing. df -h shows /var/log at 100%.",
+    "root_cause": "Disk full due to log file accumulation without proper rotation",
+    "fix_steps": [
+      "Rotate and purge logs older than 7 days: find /var/log -name '*.log' -mtime +7 -delete",
+      "Free space immediately: rm -rf /var/log/inventory-service/old-*.log",
+      "Resize the volume if disk growth is structural",
+      "Add disk usage alert at 80% threshold"
+    ],
+    "resolution_minutes": 43,
+    "status": "resolved",
+    "created_at": "2025-05-08T13:08:00+00:00",
+    "resolved_at": "2025-05-08T13:51:00+00:00"
+  },
+  {
+    "incident_id": "INC-0028",
+    "title": "auth-service \u2014 log rotation misconfiguration filling disk",
+    "service": "auth-service",
+    "severity": "SEV2",
+    "error_log": "2025-08-22T13:39:10Z ERROR auth-service-07if2-pod \u2014 logrotate: error: stat of /var/log/auth-service/*.log failed: No such file\n2025-08-22T13:39:11Z WARN auth-service-07if2-pod \u2014 Log rotation SKIPPED: disk quota exceeded\n",
+    "symptoms": "Log files not rotating. Disk full on node-03.",
+    "root_cause": "Disk full due to log file accumulation without proper rotation",
+    "fix_steps": [
+      "Rotate and purge logs older than 7 days: find /var/log -name '*.log' -mtime +7 -delete",
+      "Free space immediately: rm -rf /var/log/auth-service/old-*.log",
+      "Resize the volume if disk growth is structural",
+      "Add disk usage alert at 80% threshold"
+    ],
+    "resolution_minutes": 25,
+    "status": "resolved",
+    "created_at": "2025-08-22T13:39:00+00:00",
+    "resolved_at": "2025-08-22T14:04:00+00:00"
+  },
+  {
+    "incident_id": "INC-0029",
+    "title": "notification-service \u2014 temp files filling /var/log causing write errors",
+    "service": "notification-service",
+    "severity": "SEV3",
+    "error_log": "2025-07-15T21:55:15Z ERROR notification-service-0ifzn-pod \u2014 core dumped: write failed (device full)\n2025-07-15T21:55:16Z WARN node \u2014 /tmp usage: 32GB/32GB (100%)\n",
+    "symptoms": "/tmp filesystem exhausted by core dumps.",
+    "root_cause": "Disk full due to log file accumulation without proper rotation",
+    "fix_steps": [
+      "Rotate and purge logs older than 7 days: find /var/log -name '*.log' -mtime +7 -delete",
+      "Free space immediately: rm -rf /var/log/notification-service/old-*.log",
+      "Resize the volume if disk growth is structural",
+      "Add disk usage alert at 80% threshold"
+    ],
+    "resolution_minutes": 20,
+    "status": "resolved",
+    "created_at": "2025-07-15T21:55:00+00:00",
+    "resolved_at": "2025-07-15T22:15:00+00:00"
+  },
+  {
+    "incident_id": "INC-0030",
+    "title": "payments-api \u2014 PV (persistent volume) full causing data loss risk",
+    "service": "payments-api",
+    "severity": "SEV3",
+    "error_log": "2025-06-29T09:52:20Z ERROR payments-api-2iagl-pod \u2014 PVC payments-api-pv: no free blocks\n2025-06-29T09:52:21Z WARN kubelet \u2014 PV disk usage at 100%: payments-api-data-pvc\n",
+    "symptoms": "PersistentVolume at 100% utilisation. Data writes rejected.",
+    "root_cause": "Disk full due to log file accumulation without proper rotation",
+    "fix_steps": [
+      "Rotate and purge logs older than 7 days: find /var/log -name '*.log' -mtime +7 -delete",
+      "Free space immediately: rm -rf /var/log/payments-api/old-*.log",
+      "Resize the volume if disk growth is structural",
+      "Add disk usage alert at 80% threshold"
+    ],
+    "resolution_minutes": 17,
+    "status": "resolved",
+    "created_at": "2025-06-29T09:52:00+00:00",
+    "resolved_at": "2025-06-29T10:09:00+00:00"
+  },
+  {
+    "incident_id": "INC-0031",
+    "title": "payments-api \u2014 DNS resolution failures causing upstream timeouts",
+    "service": "payments-api",
+    "severity": "SEV1",
+    "error_log": "2025-06-06T05:37:00Z ERROR payments-api-8jdp0-pod \u2014 dial tcp: lookup db-primary.internal on 10.96.0.10:53: no such host\n2025-06-06T05:37:01Z ERROR payments-api-8jdp0-pod \u2014 Get 'http://auth-service': dial tcp: lookup auth-service: NXDOMAIN\n2025-06-06T05:37:02Z WARN coredns \u2014 [ERROR] plugin/errors: 2 NXDOMAIN for auth-service.svc.cluster.local.\n",
+    "symptoms": "Service-to-service calls failing with 'dial tcp: no such host'.",
+    "root_cause": "CoreDNS misconfiguration causing internal DNS resolution failures",
+    "fix_steps": [
+      "Restart CoreDNS pods: kubectl rollout restart deploy/coredns -n kube-system",
+      "Correct resolver config in Corefile or DNS ConfigMap",
+      "Verify resolution: kubectl exec -it payments-api-8jdp0-pod -- nslookup payments-api.svc.cluster.local",
+      "Add DNS failure rate alert via CoreDNS metrics"
+    ],
+    "resolution_minutes": 46,
+    "status": "resolved",
+    "created_at": "2025-06-06T05:37:00+00:00",
+    "resolved_at": "2025-06-06T06:23:00+00:00"
+  },
+  {
+    "incident_id": "INC-0032",
+    "title": "auth-service \u2014 CoreDNS crash causing name resolution failures",
+    "service": "auth-service",
+    "severity": "SEV2",
+    "error_log": "2025-07-08T18:12:05Z ERROR auth-service-jza7t-pod \u2014 net.UnknownHostException: auth-service.internal\n2025-07-08T18:12:06Z WARN coredns \u2014 plugin/reload: reload failed: opening 'Corefile': no such file\n",
+    "symptoms": "CoreDNS pods crashing. kubectl get pods -n kube-system shows CrashLoopBackOff.",
+    "root_cause": "CoreDNS misconfiguration causing internal DNS resolution failures",
+    "fix_steps": [
+      "Restart CoreDNS pods: kubectl rollout restart deploy/coredns -n kube-system",
+      "Correct resolver config in Corefile or DNS ConfigMap",
+      "Verify resolution: kubectl exec -it auth-service-jza7t-pod -- nslookup auth-service.svc.cluster.local",
+      "Add DNS failure rate alert via CoreDNS metrics"
+    ],
+    "resolution_minutes": 36,
+    "status": "resolved",
+    "created_at": "2025-07-08T18:12:00+00:00",
+    "resolved_at": "2025-07-08T18:48:00+00:00"
+  },
+  {
+    "incident_id": "INC-0033",
+    "title": "order-service \u2014 intermittent DNS NXDOMAIN for internal service",
+    "service": "order-service",
+    "severity": "SEV2",
+    "error_log": "2025-06-24T19:20:10Z ERROR order-service-xe6sy-pod \u2014 requests.exceptions.ConnectionError: Name or service not known\n2025-06-24T19:20:11Z WARN order-service-xe6sy-pod \u2014 DNS timeout after 5000ms for order-service.internal\n",
+    "symptoms": "Intermittent NXDOMAIN responses for internal service names.",
+    "root_cause": "CoreDNS misconfiguration causing internal DNS resolution failures",
+    "fix_steps": [
+      "Restart CoreDNS pods: kubectl rollout restart deploy/coredns -n kube-system",
+      "Correct resolver config in Corefile or DNS ConfigMap",
+      "Verify resolution: kubectl exec -it order-service-xe6sy-pod -- nslookup order-service.svc.cluster.local",
+      "Add DNS failure rate alert via CoreDNS metrics"
+    ],
+    "resolution_minutes": 30,
+    "status": "resolved",
+    "created_at": "2025-06-24T19:20:00+00:00",
+    "resolved_at": "2025-06-24T19:50:00+00:00"
+  },
+  {
+    "incident_id": "INC-0034",
+    "title": "inventory-service \u2014 DNS cache poisoning causing wrong IP resolution",
+    "service": "inventory-service",
+    "severity": "SEV3",
+    "error_log": "2025-05-20T13:42:20Z ERROR inventory-service-7y6wk-pod \u2014 Resolved IP 10.0.0.255 for db-primary \u2014 routing black-hole\n2025-05-20T13:42:21Z WARN inventory-service-7y6wk-pod \u2014 DNS answer TTL=0, caching disabled\n",
+    "symptoms": "Wrong IP resolved for database endpoint after DNS update.",
+    "root_cause": "CoreDNS misconfiguration causing internal DNS resolution failures",
+    "fix_steps": [
+      "Restart CoreDNS pods: kubectl rollout restart deploy/coredns -n kube-system",
+      "Correct resolver config in Corefile or DNS ConfigMap",
+      "Verify resolution: kubectl exec -it inventory-service-7y6wk-pod -- nslookup inventory-service.svc.cluster.local",
+      "Add DNS failure rate alert via CoreDNS metrics"
+    ],
+    "resolution_minutes": 15,
+    "status": "resolved",
+    "created_at": "2025-05-20T13:42:00+00:00",
+    "resolved_at": "2025-05-20T13:57:00+00:00"
+  },
+  {
+    "incident_id": "INC-0035",
+    "title": "notification-service \u2014 DNS search domain misconfiguration in pod spec",
+    "service": "notification-service",
+    "severity": "SEV3",
+    "error_log": "2025-07-20T18:38:30Z ERROR notification-service-xqphr-pod \u2014 SERVFAIL response from 10.96.0.10:53\n2025-07-20T18:38:31Z WARN notification-service-xqphr-pod \u2014 ndots:5 search path causing NXDOMAIN on short names\n",
+    "symptoms": "Pod unable to resolve order-service.svc.cluster.local.",
+    "root_cause": "CoreDNS misconfiguration causing internal DNS resolution failures",
+    "fix_steps": [
+      "Restart CoreDNS pods: kubectl rollout restart deploy/coredns -n kube-system",
+      "Correct resolver config in Corefile or DNS ConfigMap",
+      "Verify resolution: kubectl exec -it notification-service-xqphr-pod -- nslookup notification-service.svc.cluster.local",
+      "Add DNS failure rate alert via CoreDNS metrics"
+    ],
+    "resolution_minutes": 10,
+    "status": "resolved",
+    "created_at": "2025-07-20T18:38:00+00:00",
+    "resolved_at": "2025-07-20T18:48:00+00:00"
+  },
+  {
+    "incident_id": "INC-0036",
+    "title": "auth-service \u2014 OOMKilled pods from JVM heap leak",
+    "service": "auth-service",
+    "severity": "SEV1",
+    "error_log": "2025-05-21T04:01:00Z ERROR k8s \u2014 OOMKilled auth-service-b9w1q-pod: container auth-service exceeded memory limit 2Gi\n2025-05-21T04:01:01Z WARN auth-service-b9w1q-pod \u2014 GC overhead limit exceeded\n2025-05-21T04:01:02Z ERROR auth-service-b9w1q-pod \u2014 java.lang.OutOfMemoryError: Java heap space\n2025-05-21T04:01:03Z WARN auth-service-b9w1q-pod \u2014 Heap usage: 1.98GB/2GB (99%)\n",
+    "symptoms": "Pods OOMKilled repeatedly. Memory usage growing before each crash.",
+    "root_cause": "JVM / application memory leak causing container memory limit to be exceeded",
+    "fix_steps": [
+      "Restart affected pods immediately to restore service",
+      "Apply JVM heap limit: -Xmx1536m to prevent OOM",
+      "Identify leaking cache: take heap dump and analyse with Eclipse MAT",
+      "Patch the leaking cache with a bounded size (e.g. Caffeine maxSize=10000)"
+    ],
+    "resolution_minutes": 68,
+    "status": "resolved",
+    "created_at": "2025-05-21T04:01:00+00:00",
+    "resolved_at": "2025-05-21T05:09:00+00:00"
+  },
+  {
+    "incident_id": "INC-0037",
+    "title": "inventory-service \u2014 memory leak causing repeated OOMKilled restarts",
+    "service": "inventory-service",
+    "severity": "SEV2",
+    "error_log": "2025-05-08T20:44:05Z ERROR k8s \u2014 Container inventory-service in pod inventory-service-a11dp-pod OOMKilled (exit 137)\n2025-05-08T20:44:06Z WARN inventory-service-a11dp-pod \u2014 RSS: 1.9GB \u2014 approaching kernel OOM limit\n",
+    "symptoms": "JVM heap dump shows growing object retention in cache layer.",
+    "root_cause": "JVM / application memory leak causing container memory limit to be exceeded",
+    "fix_steps": [
+      "Restart affected pods immediately to restore service",
+      "Apply JVM heap limit: -Xmx1536m to prevent OOM",
+      "Identify leaking cache: take heap dump and analyse with Eclipse MAT",
+      "Patch the leaking cache with a bounded size (e.g. Caffeine maxSize=10000)"
+    ],
+    "resolution_minutes": 53,
+    "status": "resolved",
+    "created_at": "2025-05-08T20:44:00+00:00",
+    "resolved_at": "2025-05-08T21:37:00+00:00"
+  },
+  {
+    "incident_id": "INC-0038",
+    "title": "payments-api \u2014 container OOM due to unbounded in-memory cache",
+    "service": "payments-api",
+    "severity": "SEV2",
+    "error_log": "2025-06-03T03:29:10Z ERROR payments-api-eqtul-pod \u2014 RuntimeError: CUDA out of memory \u2014 falling back to CPU\n2025-06-03T03:29:11Z ERROR payments-api-eqtul-pod \u2014 MemoryError: Unable to allocate 512 MiB\n",
+    "symptoms": "Container memory limit hit. OOMKilled every 30 minutes.",
+    "root_cause": "JVM / application memory leak causing container memory limit to be exceeded",
+    "fix_steps": [
+      "Restart affected pods immediately to restore service",
+      "Apply JVM heap limit: -Xmx1536m to prevent OOM",
+      "Identify leaking cache: take heap dump and analyse with Eclipse MAT",
+      "Patch the leaking cache with a bounded size (e.g. Caffeine maxSize=10000)"
+    ],
+    "resolution_minutes": 33,
+    "status": "resolved",
+    "created_at": "2025-06-03T03:29:00+00:00",
+    "resolved_at": "2025-06-03T04:02:00+00:00"
+  },
+  {
+    "incident_id": "INC-0039",
+    "title": "order-service \u2014 JVM heap exhaustion causing process crashes",
+    "service": "order-service",
+    "severity": "SEV3",
+    "error_log": "2025-07-24T05:47:15Z WARN order-service-5q14j-pod \u2014 LRU cache size: 2.1M entries, 1.8GB resident\n2025-07-24T05:47:16Z ERROR k8s \u2014 Evicted pod order-service-5q14j-pod: The node was low on resource: memory\n",
+    "symptoms": "kubectl describe pod shows OOMKilled exit code 137.",
+    "root_cause": "JVM / application memory leak causing container memory limit to be exceeded",
+    "fix_steps": [
+      "Restart affected pods immediately to restore service",
+      "Apply JVM heap limit: -Xmx1536m to prevent OOM",
+      "Identify leaking cache: take heap dump and analyse with Eclipse MAT",
+      "Patch the leaking cache with a bounded size (e.g. Caffeine maxSize=10000)"
+    ],
+    "resolution_minutes": 28,
+    "status": "resolved",
+    "created_at": "2025-07-24T05:47:00+00:00",
+    "resolved_at": "2025-07-24T06:15:00+00:00"
+  },
+  {
+    "incident_id": "INC-0040",
+    "title": "search-service \u2014 RSS memory growth leading to OOMKilled evictions",
+    "service": "search-service",
+    "severity": "SEV3",
+    "error_log": "2025-04-20T22:18:20Z WARN search-service-im6cf-pod \u2014 GC pause 8s \u2014 memory pressure high\n2025-04-20T22:18:21Z ERROR search-service-im6cf-pod \u2014 Killed process (oom-kill event) in cgroup\n",
+    "symptoms": "Memory graph shows sawtooth pattern (grow, crash, restart).",
+    "root_cause": "JVM / application memory leak causing container memory limit to be exceeded",
+    "fix_steps": [
+      "Restart affected pods immediately to restore service",
+      "Apply JVM heap limit: -Xmx1536m to prevent OOM",
+      "Identify leaking cache: take heap dump and analyse with Eclipse MAT",
+      "Patch the leaking cache with a bounded size (e.g. Caffeine maxSize=10000)"
+    ],
+    "resolution_minutes": 20,
+    "status": "resolved",
+    "created_at": "2025-04-20T22:18:00+00:00",
+    "resolved_at": "2025-04-20T22:38:00+00:00"
+  }
+]
